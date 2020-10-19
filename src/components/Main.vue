@@ -84,10 +84,6 @@ export default {
             if (!this.paused){
                 this.timer(this.countdown)
             }
-            
-        },
-        pauseTimer(){
-            clearInterval(countdownTimer)
         },
         startBreak(){
             clearInterval(countdownTimer)
