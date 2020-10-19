@@ -48,8 +48,8 @@ export default {
             currentMode: null,
             paused: true,
             // in seconds, multiply it by 60 for a minute
-            workTime: 5,
-            breakTime: 5,
+            workTime: 10 * 60,
+            breakTime: 5 * 60,
             countdown: null,
         }
     },
