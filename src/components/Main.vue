@@ -20,7 +20,9 @@
         />
       </div>
       <div class="actions">
-        <ButtonStart @start="startTimer"/>
+
+        <ButtonAction @click="startOrPauseTimer(!paused)" 
+            :iconClass="paused ? 'mdi-play-circle-outline' : 'mdi-pause'"/>
         <ButtonRestart @restart="stop"/>
       </div>
   </div>
@@ -30,24 +32,24 @@
 
 import SettingSessionTime from './SettingSessionTime'
 import SettingBreakTime from './SettingBreakTime'
-import ButtonStart from './ButtonStart'
+import ButtonAction from './ButtonAction'
 import ButtonRestart from './ButtonRestart'
-
 let countdownTimer = null
 
 export default {
     components: {
         SettingSessionTime,
         SettingBreakTime,
-        ButtonStart,
+        ButtonAction,
         ButtonRestart
     },
     data(){
         return{
             currentMode: null,
+            paused: true,
             // in seconds, multiply it by 60 for a minute
-            workTime: 10 * 60,
-            breakTime: 5 * 60,
+            workTime: 5,
+            breakTime: 5,
             countdown: null,
         }
     },
@@ -56,11 +58,15 @@ export default {
             // when it reaches to 0. 0 is false in javascript
             if (this.countdown == 0 && this.currentMode == "Break"){
                 this.$emit('incrementCycle')
-                this.startTimer()
+                this.countdown = this.workTime
+                this.startOrPauseTimer(false)
             }else if(this.countdown == 0){
                 this.startBreak()
             }
         },
+    },
+    mounted(){
+        this.countdown = this.workTime
     },
     computed: {
         minutes(){
@@ -71,31 +77,39 @@ export default {
         }
     },
     methods: {
-        startTimer() {
+        startOrPauseTimer(paused) {
+            this.paused = paused
             clearInterval(countdownTimer)
             this.currentMode = "Work"
-            this.timer(this.workTime)
+            if (!this.paused){
+                this.timer(this.countdown)
+            }
+            
+        },
+        pauseTimer(){
+            clearInterval(countdownTimer)
         },
         startBreak(){
             clearInterval(countdownTimer)
             this.currentMode = "Break"
-            this.timer(this.breakTime)
+            this.countdown = this.breakTime
+            this.timer()
         },
         stop(){
             clearInterval(countdownTimer)
             this.currentMode = null
             this.countdown = this.workTime
+            this.paused = true
             this.$emit('resetCycle')
         },
-        timer(duration){
+        timer(){
             countdownTimer = setInterval( () => {
                 
-                if (duration == 0){
+                if (this.countdown == 0){
                     clearInterval(countdownTimer)
                 }
                 // decrement the timer by one second
-                this.countdown = duration
-                duration -= 1
+                --this.countdown;
             }, 1000);
         }
     }
