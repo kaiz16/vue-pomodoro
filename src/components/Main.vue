@@ -1,5 +1,6 @@
 <template>
   <div class="main">
+      <p v-if="paused && countdown">Paused</p>
       <p>{{currentMode == "Break" ? 'Take a short break' : currentMode}}</p>
       <h1>
           <!-- eslint-disable -->
@@ -21,7 +22,7 @@
       </div>
       <div class="actions">
 
-        <ButtonAction @click="startOrPauseTimer(!paused)" 
+        <ButtonAction @click="startOrPauseTimer" 
             :iconClass="paused ? 'mdi-play-circle-outline' : 'mdi-pause'"/>
         <ButtonRestart @restart="stop"/>
       </div>
@@ -58,15 +59,11 @@ export default {
             // when it reaches to 0. 0 is false in javascript
             if (this.countdown == 0 && this.currentMode == "Break"){
                 this.$emit('incrementCycle')
-                this.countdown = this.workTime
-                this.startOrPauseTimer(false)
+                this.startSession('Work')
             }else if(this.countdown == 0){
-                this.startBreak()
+                this.startSession('Break')
             }
         },
-    },
-    mounted(){
-        this.countdown = this.workTime
     },
     computed: {
         minutes(){
@@ -77,24 +74,32 @@ export default {
         }
     },
     methods: {
-        startOrPauseTimer(paused) {
-            this.paused = paused
-            clearInterval(countdownTimer)
-            this.currentMode = "Work"
-            if (!this.paused){
-                this.timer(this.countdown)
-            }
+        startOrPauseTimer() {
+            this.paused = !this.paused
+            this.startSession(this.currentMode || 'Work')
         },
-        startBreak(){
+        startSession(mode){
             clearInterval(countdownTimer)
-            this.currentMode = "Break"
-            this.countdown = this.breakTime
+            if (this.paused){
+                return
+            }
+            this.currentMode = mode
+            // if the countdown is available, it's paused, so just continue
+            if (this.countdown){
+                this.timer()
+                return
+            }
+            if (mode == 'Work'){
+                this.countdown = this.workTime
+            }else if(mode == 'Break'){
+                this.countdown = this.breakTime
+            }
             this.timer()
         },
         stop(){
             clearInterval(countdownTimer)
             this.currentMode = null
-            this.countdown = this.workTime
+            this.countdown = null
             this.paused = true
             this.$emit('resetCycle')
         },
